@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
-import { play } from '~/data/spotify';
+import { getMyPlaylists, play } from '~/data/spotify';
 import { updateDeviceId } from '~/redux/spotifySlice';
 import initializePlayer from './initializePlayer';
 
@@ -10,6 +10,7 @@ const WebPlayer = ({ token }) => {
     const [currentTrack, setTrack] = useState();
     const [isPaused, setPaused] = useState(true);
     const [isActive, setActive] = useState();
+    const [playlists, setPlaylists] = useState();
 
     const { accessToken, deviceId } = useSelector((state) => state.spotify);
     const dispatch = useDispatch();
@@ -55,58 +56,81 @@ const WebPlayer = ({ token }) => {
         }
     };
 
+    useEffect(() => {
+        if (accessToken)
+            getMyPlaylists({ accessToken }).then((res) => {
+                setPlaylists(res.items);
+                console.log(res);
+            });
+    }, [accessToken]);
+
+    const handlePlaylistClick = () => {
+        if (readyToPlay) {
+            const randomItem = playlists[Math.floor(Math.random() * playlists.length)];
+            play({
+                accessToken,
+                deviceId,
+                uri: randomItem.uri,
+            });
+        }
+    };
+
     return (
-        <>
-            <div className="container">
-                <div className="main-wrapper">
-                    {currentTrack && (
-                        <>
-                            <img
-                                src={currentTrack.album.images[0].url}
-                                className="now-playing__cover"
-                                alt=""
-                            />
-                            <div className="now-playing__side">
-                                <div className="now-playing__name">{currentTrack.name}</div>
-                                <div className="now-playing__artist">
-                                    {currentTrack.artists[0].name}
-                                </div>
+        <div className="container">
+            <div className="main-wrapper">
+                {currentTrack && (
+                    <>
+                        <img
+                            src={currentTrack.album.images[0].url}
+                            className="now-playing__cover"
+                            alt=""
+                        />
+                        <div className="now-playing__side">
+                            <div className="now-playing__name">{currentTrack.name}</div>
+                            <div className="now-playing__artist">
+                                {currentTrack.artists[0].name}
                             </div>
-                        </>
-                    )}
+                        </div>
+                    </>
+                )}
 
-                    {isActive ? 'PLAYER ACTIVE' : 'PLAYER NOT ACTIVE'}
-                    <button
-                        className="btn-spotify"
-                        onClick={() => {
-                            player.previousTrack();
-                        }}
-                    >
-                        &lt;&lt;
-                    </button>
+                {isActive ? 'PLAYER ACTIVE' : 'PLAYER NOT ACTIVE'}
 
-                    <button
-                        className="btn-spotify"
-                        onClick={() => {
-                            player.togglePlay();
-                        }}
-                    >
-                        {isPaused ? 'PLAY' : 'PAUSE'}
-                    </button>
+                <button
+                    className="btn-spotify"
+                    onClick={() => {
+                        player.previousTrack();
+                    }}
+                >
+                    &lt;&lt;
+                </button>
 
-                    <button
-                        className="btn-spotify"
-                        onClick={() => {
-                            player.nextTrack();
-                        }}
-                    >
-                        &gt;&gt;
-                    </button>
+                <button
+                    className="btn-spotify"
+                    onClick={() => {
+                        player.togglePlay();
+                    }}
+                >
+                    {isPaused ? 'PLAY' : 'PAUSE'}
+                </button>
 
-                    {readyToPlay && <button onClick={handlePlayClick}>PLAY STUFF</button>}
-                </div>
+                <button
+                    className="btn-spotify"
+                    onClick={() => {
+                        player.nextTrack();
+                    }}
+                >
+                    &gt;&gt;
+                </button>
+
+                {readyToPlay && !currentTrack && (
+                    <button onClick={handlePlayClick}>LOAD HER UP</button>
+                )}
+                {readyToPlay && !currentTrack && (
+                    <button onClick={handlePlaylistClick}>PLAY THA PLAYLIST</button>
+                )}
             </div>
-        </>
+        </div>
     );
 };
 
