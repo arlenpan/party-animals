@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSongAudioAnalysis, getSongAudioFeatures } from '~/data/spotify';
+import prettifyMilliseconds from '~/lib/prettifyMilliseconds';
 import { updateDeviceId } from '~/redux/spotifySlice';
 import VolumeSlider from '../VolumeSlider/VolumeSlider';
 import initializePlayer from './initializePlayer';
@@ -11,8 +12,10 @@ const WebPlayer = () => {
     const [isActive, setActive] = useState();
     const [currentTrack, setCurrentTrack] = useState();
     const [currentTrackMeta, setCurrentTrackMeta] = useState();
-    const [currentVolume, setVolume] = useState();
-    const [timer, setTimer] = useState();
+    const [currentVolume, setCurrentVolume] = useState();
+    const [statePosition, setStatePosition] = useState();
+    const [stateLastUpdated, setStateLastUpdated] = useState();
+    const [displayTime, setDisplayTime] = useState();
 
     const { accessToken, deviceId } = useSelector((state) => state.spotify);
     const dispatch = useDispatch();
@@ -25,6 +28,22 @@ const WebPlayer = () => {
     useEffect(() => {
         if (trackId) onCurrentTrackChange(trackId);
     }, [trackId]);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setDisplayTime(getSongPosition());
+        }, 1000);
+
+        return () => {
+            clearInterval(timer);
+        };
+    }, [stateLastUpdated, statePosition, isPaused]);
+
+    const getSongPosition = () => {
+        if (isPaused) return statePosition;
+        let position = statePosition + (performance.now() - stateLastUpdated);
+        return position > currentTrack.duration_ms ? currentTrack.duration_ms : position;
+    };
 
     const onPlayerReady = (player) => {
         setPlayer(player);
@@ -41,11 +60,13 @@ const WebPlayer = () => {
 
         player.addListener('player_state_changed', (state) => {
             if (!state) return;
-            startTimer(state.position);
+            console.log(state);
             setCurrentTrack(state.track_window.current_track);
             setPaused(state.paused);
+            setStatePosition(state.position);
+            setStateLastUpdated(performance.now());
             player.getCurrentState().then((state) => setActive(!!state));
-            player.getVolume().then((volume) => setVolume(volume));
+            player.getVolume().then((volume) => setCurrentVolume(volume));
         });
 
         player.connect();
@@ -78,8 +99,9 @@ const WebPlayer = () => {
                     </>
                 )}
 
-                {isActive ? 'PLAYER ACTIVE' : 'PLAYER NOT ACTIVE'}
-
+                <p>{isActive ? 'PLAYER ACTIVE' : 'PLAYER NOT ACTIVE'}</p>
+                {displayTime && <p>{displayTime}</p>}
+                {displayTime && <p>{prettifyMilliseconds(displayTime)}</p>}
                 <button
                     className="btn-spotify"
                     onClick={() => {
@@ -114,7 +136,7 @@ const WebPlayer = () => {
                 {currentTrackMeta?.features &&
                     Object.entries(currentTrackMeta?.features).map(([key, value]) => {
                         return (
-                            <p>
+                            <p key={key}>
                                 {key}: {value}
                             </p>
                         );

@@ -21,8 +21,8 @@ const appFetch = async (
     });
 
     if (res && res.ok) {
-        const body = await res.json();
-        return body;
+        const text = await res.text();
+        return text ? JSON.parse(text) : {};
     }
 
     // TODO: something went wrong - error handling

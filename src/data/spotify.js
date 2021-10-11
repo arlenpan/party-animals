@@ -2,12 +2,13 @@ import appFetch from './fetch';
 
 export const play = async ({ accessToken, deviceId, uri }) => {
     console.log('PLAYING', uri);
-    return appFetch('https://api.spotify.com/v1/me/player/play', {
+    const res = await appFetch('https://api.spotify.com/v1/me/player/play', {
         query: { device_id: deviceId },
         method: 'PUT',
         body: { uris: [uri] },
         accessToken,
     });
+    return res;
 };
 
 export const searchSongs = async ({ accessToken, query }) => {
