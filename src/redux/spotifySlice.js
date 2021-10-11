@@ -5,6 +5,7 @@ export const spotifySlice = createSlice({
     initialState: {
         accessToken: null,
         deviceId: null,
+        player: null,
     },
     reducers: {
         updateToken: (state, action) => {
@@ -13,8 +14,11 @@ export const spotifySlice = createSlice({
         updateDeviceId: (state, action) => {
             state.deviceId = action.payload;
         },
+        updatePlayer: (state, action) => {
+            state.player = action.player;
+        },
     },
 });
 
-export const { updateToken, updateDeviceId } = spotifySlice.actions;
+export const { updateToken, updateDeviceId, updatePlayer } = spotifySlice.actions;
 export default spotifySlice.reducer;

@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 
-const Search = ({ onSearch }) => {
+const Search = ({ onSearch, placeholder = 'Search' }) => {
     const { register, handleSubmit } = useForm();
 
     const onFormSubmit = ({ search }) => {
@@ -8,13 +8,10 @@ const Search = ({ onSearch }) => {
     };
 
     return (
-        <div>
-            <div>Search</div>
-            <form onSubmit={handleSubmit(onFormSubmit)}>
-                <input {...register('search')} />
-                <button type="submit">Search</button>
-            </form>
-        </div>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
+            <input {...register('search')} placeholder={placeholder} />
+            <button type="submit">Search</button>
+        </form>
     );
 };
 

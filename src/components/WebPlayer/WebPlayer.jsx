@@ -1,28 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { getMyPlaylists, play } from '~/data/spotify';
-import { updateDeviceId } from '~/redux/spotifySlice';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getSongAudioAnalysis, getSongAudioFeatures } from '~/data/spotify';
+import { updateDeviceId, updatePlayer } from '~/redux/spotifySlice';
+import VolumeSlider from '../VolumeSlider/VolumeSlider';
 import initializePlayer from './initializePlayer';
 
-const WebPlayer = ({ token }) => {
+const WebPlayer = () => {
     const [player, setPlayer] = useState();
-    const [currentTrack, setTrack] = useState();
     const [isPaused, setPaused] = useState(true);
     const [isActive, setActive] = useState();
-    const [playlists, setPlaylists] = useState();
+    const [currentTrack, setCurrentTrack] = useState();
+    const [currentTrackMeta, setCurrentTrackMeta] = useState();
+    const [currentVolume, setVolume] = useState();
 
     const { accessToken, deviceId } = useSelector((state) => state.spotify);
     const dispatch = useDispatch();
-
-    const readyToPlay = accessToken && deviceId && player;
+    const trackId = currentTrack && currentTrack.id;
 
     useEffect(() => {
         initializePlayer({ accessToken, onReady: onPlayerReady });
     }, []);
 
+    useEffect(async () => {
+        if (trackId) {
+            const features = await getSongAudioFeatures({ accessToken, id: trackId });
+            const analysis = await getSongAudioAnalysis({ accessToken, id: trackId });
+            setCurrentTrackMeta({ features, analysis });
+        }
+    }, [trackId]);
+
     const onPlayerReady = (player) => {
         setPlayer(player);
+        dispatch(updatePlayer(player));
 
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID:', device_id);
@@ -36,43 +45,17 @@ const WebPlayer = ({ token }) => {
 
         player.addListener('player_state_changed', (state) => {
             if (!state) return;
-
-            console.log(state);
-            setTrack(state.track_window.current_track);
+            setCurrentTrack(state.track_window.current_track);
             setPaused(state.paused);
             player.getCurrentState().then((state) => setActive(!!state));
+            player.getVolume().then((volume) => setVolume(volume));
         });
 
         player.connect();
     };
 
-    const handlePlayClick = () => {
-        if (readyToPlay) {
-            play({
-                accessToken,
-                deviceId,
-                uri: 'spotify:track:7xGfFoTpQ2E7fRF5lN10tr',
-            });
-        }
-    };
-
-    useEffect(() => {
-        if (accessToken)
-            getMyPlaylists({ accessToken }).then((res) => {
-                setPlaylists(res.items);
-                console.log(res);
-            });
-    }, [accessToken]);
-
-    const handlePlaylistClick = () => {
-        if (readyToPlay) {
-            const randomItem = playlists[Math.floor(Math.random() * playlists.length)];
-            play({
-                accessToken,
-                deviceId,
-                uri: randomItem.uri,
-            });
-        }
+    const handleVolumeChange = (volume) => {
+        player.setVolume(volume);
     };
 
     return (
@@ -80,16 +63,14 @@ const WebPlayer = ({ token }) => {
             <div className="main-wrapper">
                 {currentTrack && (
                     <>
-                        <img
-                            src={currentTrack.album.images[0].url}
-                            className="now-playing__cover"
-                            alt=""
-                        />
+                        {currentTrack.album && (
+                            <img src={currentTrack.album.images[0].url} className="now-playing__cover" alt="" />
+                        )}
                         <div className="now-playing__side">
                             <div className="now-playing__name">{currentTrack.name}</div>
-                            <div className="now-playing__artist">
-                                {currentTrack.artists[0].name}
-                            </div>
+                            {currentTrack.artists && (
+                                <div className="now-playing__artist">{currentTrack.artists[0].name}</div>
+                            )}
                         </div>
                     </>
                 )}
@@ -123,11 +104,8 @@ const WebPlayer = ({ token }) => {
                     &gt;&gt;
                 </button>
 
-                {readyToPlay && !currentTrack && (
-                    <button onClick={handlePlayClick}>LOAD HER UP</button>
-                )}
-                {readyToPlay && !currentTrack && (
-                    <button onClick={handlePlaylistClick}>PLAY THA PLAYLIST</button>
+                {currentVolume !== undefined && (
+                    <VolumeSlider value={currentVolume * 100} onChange={handleVolumeChange} />
                 )}
             </div>
         </div>

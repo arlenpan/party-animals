@@ -11,11 +11,15 @@ const HomePage = () => {
     const [results, setResults] = useState([]);
 
     const handleLoginClick = () => router.push('/api/spotify-login');
+
     const handleSearch = (query) => {
         searchSongs({ accessToken, query }).then((res) => {
-            setResults(res?.tracks.items);
+            if (res && res.tracks) {
+                setResults(res?.tracks.items);
+            }
         });
     };
+
     const handleSearchResultClick = (item) => {
         play({ accessToken, uri: item.uri, deviceId });
     };
@@ -27,7 +31,7 @@ const HomePage = () => {
                 <>
                     <Search onSearch={handleSearch} />
                     <SearchResults results={results} onClickResult={handleSearchResultClick} />
-                    <WebPlayer token={accessToken} />
+                    <WebPlayer />
                 </>
             )}
         </div>

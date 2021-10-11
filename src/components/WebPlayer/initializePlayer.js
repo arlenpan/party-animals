@@ -1,3 +1,5 @@
+import { PLAYER_NAME } from '~/data/consts';
+
 const initializePlayer = ({ accessToken, onReady }) => {
     const script = document.createElement('script');
     script.src = 'https://sdk.scdn.co/spotify-player.js';
@@ -6,7 +8,7 @@ const initializePlayer = ({ accessToken, onReady }) => {
 
     window.onSpotifyWebPlaybackSDKReady = () => {
         const player = new window.Spotify.Player({
-            name: 'Party Animals Web Player',
+            name: PLAYER_NAME,
             getOAuthToken: (cb) => cb(accessToken),
         });
         if (onReady) onReady(player);
