@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSongAudioAnalysis, getSongAudioFeatures } from '~/data/spotify';
-import { updateDeviceId, updatePlayer } from '~/redux/spotifySlice';
+import { updateDeviceId } from '~/redux/spotifySlice';
 import VolumeSlider from '../VolumeSlider/VolumeSlider';
 import initializePlayer from './initializePlayer';
 
@@ -12,6 +12,7 @@ const WebPlayer = () => {
     const [currentTrack, setCurrentTrack] = useState();
     const [currentTrackMeta, setCurrentTrackMeta] = useState();
     const [currentVolume, setVolume] = useState();
+    const [timer, setTimer] = useState();
 
     const { accessToken, deviceId } = useSelector((state) => state.spotify);
     const dispatch = useDispatch();
@@ -21,17 +22,12 @@ const WebPlayer = () => {
         initializePlayer({ accessToken, onReady: onPlayerReady });
     }, []);
 
-    useEffect(async () => {
-        if (trackId) {
-            const features = await getSongAudioFeatures({ accessToken, id: trackId });
-            const analysis = await getSongAudioAnalysis({ accessToken, id: trackId });
-            setCurrentTrackMeta({ features, analysis });
-        }
+    useEffect(() => {
+        if (trackId) onCurrentTrackChange(trackId);
     }, [trackId]);
 
     const onPlayerReady = (player) => {
         setPlayer(player);
-        dispatch(updatePlayer(player));
 
         player.addListener('ready', ({ device_id }) => {
             console.log('Ready with Device ID:', device_id);
@@ -45,6 +41,7 @@ const WebPlayer = () => {
 
         player.addListener('player_state_changed', (state) => {
             if (!state) return;
+            startTimer(state.position);
             setCurrentTrack(state.track_window.current_track);
             setPaused(state.paused);
             player.getCurrentState().then((state) => setActive(!!state));
@@ -54,8 +51,14 @@ const WebPlayer = () => {
         player.connect();
     };
 
+    const onCurrentTrackChange = async (trackId) => {
+        const features = await getSongAudioFeatures({ accessToken, id: trackId });
+        const analysis = await getSongAudioAnalysis({ accessToken, id: trackId });
+        setCurrentTrackMeta({ features, analysis });
+    };
+
     const handleVolumeChange = (volume) => {
-        player.setVolume(volume);
+        player.setVolume(volume / 100);
     };
 
     return (
@@ -107,6 +110,15 @@ const WebPlayer = () => {
                 {currentVolume !== undefined && (
                     <VolumeSlider value={currentVolume * 100} onChange={handleVolumeChange} />
                 )}
+
+                {currentTrackMeta?.features &&
+                    Object.entries(currentTrackMeta?.features).map(([key, value]) => {
+                        return (
+                            <p>
+                                {key}: {value}
+                            </p>
+                        );
+                    })}
             </div>
         </div>
     );
