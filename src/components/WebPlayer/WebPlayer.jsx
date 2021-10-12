@@ -41,7 +41,7 @@ const WebPlayer = () => {
 
     const getSongPosition = () => {
         if (isPaused) return statePosition;
-        let position = statePosition + (performance.now() - stateLastUpdated);
+        const position = statePosition + (performance.now() - stateLastUpdated);
         return position > currentTrack.duration_ms ? currentTrack.duration_ms : position;
     };
 
@@ -88,12 +88,18 @@ const WebPlayer = () => {
                 {currentTrack && (
                     <>
                         {currentTrack.album && (
-                            <img src={currentTrack.album.images[0].url} className="now-playing__cover" alt="" />
+                            <img
+                                src={currentTrack.album.images[0].url}
+                                className="now-playing__cover"
+                                alt=""
+                            />
                         )}
                         <div className="now-playing__side">
                             <div className="now-playing__name">{currentTrack.name}</div>
                             {currentTrack.artists && (
-                                <div className="now-playing__artist">{currentTrack.artists[0].name}</div>
+                                <div className="now-playing__artist">
+                                    {currentTrack.artists[0].name}
+                                </div>
                             )}
                         </div>
                     </>
@@ -103,6 +109,7 @@ const WebPlayer = () => {
                 {displayTime && <p>{displayTime}</p>}
                 {displayTime && <p>{prettifyMilliseconds(displayTime)}</p>}
                 <button
+                    type="button"
                     className="btn-spotify"
                     onClick={() => {
                         player.previousTrack();
@@ -112,6 +119,7 @@ const WebPlayer = () => {
                 </button>
 
                 <button
+                    type="button"
                     className="btn-spotify"
                     onClick={() => {
                         player.togglePlay();
@@ -121,6 +129,7 @@ const WebPlayer = () => {
                 </button>
 
                 <button
+                    type="button"
                     className="btn-spotify"
                     onClick={() => {
                         player.nextTrack();
@@ -134,13 +143,11 @@ const WebPlayer = () => {
                 )}
 
                 {currentTrackMeta?.features &&
-                    Object.entries(currentTrackMeta?.features).map(([key, value]) => {
-                        return (
-                            <p key={key}>
-                                {key}: {value}
-                            </p>
-                        );
-                    })}
+                    Object.entries(currentTrackMeta?.features).map(([key, value]) => (
+                        <p key={key}>
+                            {key}: {value}
+                        </p>
+                    ))}
             </div>
         </div>
     );

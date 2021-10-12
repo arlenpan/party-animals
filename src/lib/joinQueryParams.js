@@ -3,6 +3,7 @@ const joinQueryParams = (params /** obj */) =>
         .map((key) => {
             const value = params[key];
             if (value) return `${key}=${value}`;
+            return '';
         })
         .join('&');
 

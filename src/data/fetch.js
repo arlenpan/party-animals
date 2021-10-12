@@ -1,9 +1,14 @@
 import joinQueryParams from '~/lib/joinQueryParams';
 
-const appFetch = async (
-    url,
-    { method = 'GET', query, body, headers = { 'Content-Type': 'application/json' }, accessToken }
-) => {
+const appFetch = async (url, options) => {
+    const {
+        method = 'GET',
+        query,
+        body,
+        headers = { 'Content-Type': 'application/json' },
+        accessToken,
+    } = options;
+
     let fetchUrl = url;
 
     // query params
@@ -12,7 +17,7 @@ const appFetch = async (
     }
 
     // headers
-    if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
     const res = await fetch(fetchUrl, {
         method,

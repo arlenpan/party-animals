@@ -1,7 +1,7 @@
-import '~/styles/globals.css';
+import { CookiesProvider } from 'react-cookie';
 import { Provider } from 'react-redux';
 import store from '~/redux/store';
-import { CookiesProvider } from 'react-cookie';
+import '~/styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
     return (

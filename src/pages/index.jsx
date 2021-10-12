@@ -26,7 +26,11 @@ const HomePage = () => {
 
     return (
         <div>
-            {!accessToken && <button onClick={handleLoginClick}>Login to Spotify</button>}
+            {!accessToken && (
+                <button type="button" onClick={handleLoginClick}>
+                    Login to Spotify
+                </button>
+            )}
             {accessToken && (
                 <>
                     <Search onSearch={handleSearch} placeholder="Search Song..." />

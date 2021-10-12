@@ -5,13 +5,13 @@ const SearchResults = ({ results = [], onClickResult }) => {
 
     return (
         <div>
-            {results.map((item) => {
-                return (
-                    <div key={item.id}>
-                        <button onClick={() => handleClickResult(item)}>{item.name}</button>
-                    </div>
-                );
-            })}
+            {results.map((item) => (
+                <div key={item.id}>
+                    <button type="button" onClick={() => handleClickResult(item)}>
+                        {item.name}
+                    </button>
+                </div>
+            ))}
         </div>
     );
 };

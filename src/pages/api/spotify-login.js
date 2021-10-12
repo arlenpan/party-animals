@@ -11,7 +11,7 @@ const scopes = 'user-read-private user-read-email streaming';
 export default function handler(req, res) {
     const params = {
         response_type: 'token',
-        client_id: client_id,
+        client_id,
         scope: scopes ? encodeURIComponent(scopes) : '',
         redirect_uri: encodeURIComponent(redirect_uri),
         state: '', // TODO: add hash here and compare to secure against x-site-forgery
